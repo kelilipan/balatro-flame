@@ -1,7 +1,5 @@
 uniform float time;
 uniform float amount;
-uniform vec4 texture_details;
-uniform vec2 image_details;
 uniform vec4 colour_1;
 uniform vec4 colour_2;
 uniform float id;

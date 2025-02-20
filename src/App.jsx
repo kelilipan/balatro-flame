@@ -7,10 +7,8 @@ import fragmentShader from "./shaders/fragmentShader.glsl";
 import vertexShader from "./shaders/vertexShader.glsl";
 // Flame shader material
 const UNIFORMS = {
-  time: { value: 1 },
+  time: { value: 0 },
   amount: { value: 10 },
-  texture_details: { value: [1, 1, 1, 1] },
-  image_details: { value: [1, 1] },
   colour_1: { value: [0.996, 0.373, 0.333, 1] },
   colour_2: { value: [1, 1, 1, 1] },
   id: { value: 1.0 },
@@ -18,11 +16,27 @@ const UNIFORMS = {
 
 function FlameWithNumber({ position, number, color1, color2, amount = 10 }) {
   const meshRef = useRef();
+  // Create material ref to persist between renders
+  const materialRef = useRef(
+    new THREE.ShaderMaterial({
+      fragmentShader,
+      vertexShader,
+      uniforms: {
+        ...UNIFORMS,
+        colour_1: { value: color1 },
+        colour_2: { value: color2 },
+      },
+      transparent: true,
+      side: THREE.DoubleSide,
+    })
+  );
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.material.uniforms.time.value = state.clock.elapsedTime;
-      meshRef.current.material.uniforms.amount.value = amount;
+      materialRef.current.uniforms.time.value = state.clock.elapsedTime;
+      materialRef.current.uniforms.amount.value = amount;
+      materialRef.current.uniforms.colour_1.value = color1;
+      materialRef.current.uniforms.colour_2.value = color2;
     }
   });
 
@@ -30,17 +44,7 @@ function FlameWithNumber({ position, number, color1, color2, amount = 10 }) {
     <>
       <mesh ref={meshRef} position={position} rotation-z={Math.PI}>
         <planeGeometry args={[1, 1]} />
-        <shaderMaterial
-          fragmentShader={fragmentShader}
-          vertexShader={vertexShader}
-          uniforms={{
-            ...UNIFORMS,
-            colour_1: { value: color1 },
-            colour_2: { value: color2 },
-          }}
-          transparent={true}
-          side={THREE.DoubleSide}
-        />
+        <primitive object={materialRef.current} attach="material" />
       </mesh>
       <Html
         position={[0, -0.31, 0]}
